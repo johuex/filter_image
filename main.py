@@ -74,6 +74,7 @@ class MainApp(form.Ui_MainWindow):
         двумерный среднегеометрический фильтр
         :return:
         """
+        # TODO если в ядре 0, то будет пятно (нужно увел на 1, а потом ???)
         core = np.zeros((self.core_size, self.core_size), dtype=object)  # ядро
         for i in range(self.core_size//2, self.y - self.core_size//2):
             for j in range(self.core_size//2, self.x - self.core_size//2):
@@ -85,17 +86,18 @@ class MainApp(form.Ui_MainWindow):
         одномерный среднегеометрический фильтр
         :return:
         """
-        core = np.zeros(self.core_size, dtype=object)  # ядро
+        # TODO если в ядре 0, то будет пятно (нужно увел на 1, а потом ???)
+        core = np.zeros(self.core_size, dtype=object)  # маска, заполненная нулями
+        # np.prod - перемножение всех элементов маски
+        for i in range(self.y):
+            for j in range(self.core_size//2, self.x - self.core_size//2):  # проход по строкам
+                core = self.image[i, j-self.core_size//2:j+self.core_size//2+1]
+                self.final_image[i, j] = int(np.prod(core) ** (1 / (self.core_size)))
 
         for i in range(self.x):
-            for j in range(self.core_size//2, self.y - self.core_size//2):
-                core = self.image[j-self.core_size//2:j+self.core_size//2+1, i]
-                self.final_image[j, i] = int(np.prod(core) ** (1 / (self.core_size*self.core_size)))
-
-        for i in range(self.y):
-            for j in range(self.core_size//2, self.x - self.core_size//2):
-                core = self.image[i, j-self.core_size//2:j+self.core_size//2+1]
-                self.final_image[i, j] = self.final_image[i, j] * int(np.prod(core) ** (1 / (self.core_size*self.core_size)))
+            for j in range(self.core_size//2, self.y - self.core_size//2):  # проход по столбцам
+                core = self.final_image[j-self.core_size//2:j+self.core_size//2+1, i]
+                self.final_image[j, i] = int(np.prod(core) ** (1 / (self.core_size)))
 
 
 
@@ -104,6 +106,7 @@ class MainApp(form.Ui_MainWindow):
         двумерный среднегармонический фильтр
         :return:
         """
+        # TODO если в ядре 0, то будет пятно (нужно увел на 1, а потом ???)
         core = np.zeros((self.core_size, self.core_size), dtype=object)  # ядро
         for i in range(self.core_size // 2, self.y - self.core_size // 2):
             for j in range(self.core_size // 2, self.x - self.core_size // 2):
@@ -117,17 +120,19 @@ class MainApp(form.Ui_MainWindow):
         одномерный среднегармонический фильтр
         :return:
         """
+        # TODO если в ядре 0, то будет пятно (нужно увел на 1, а потом ???)
         pass
 
     def show_gist(self):
         """показать гистограмму яркости обработанного изображения"""
-
+        # TODO гистограмма для двух изображений
         plt.hist(self.final_image)
         plt.title("Гистограмма яркости")
         plt.show()
 
     def section_graph(self):
         """показать разрез функции яркости для n-ой строки"""
+        # TODO разрез для двух изображений
         if (type(self.final_image) is np.ndarray):
             y = self.final_image[int(self.lineEdit_4.text()), :]  # яркости в строке
             x = np.arange(0, self.x, 1)
