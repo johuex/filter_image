@@ -1,6 +1,7 @@
 from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtWidgets import QFileDialog
 import form
+import time
 import numpy as np
 import cv2  # для чтение bmp файлов
 import matplotlib.pyplot as plt
@@ -12,7 +13,7 @@ class MainApp(form.Ui_MainWindow):
         self.setupUi(self)
         self.image = 0  # исходное изображение
         self.fname = ""  # путь к исх изо
-        # self.final_image = 0  # обработанное изображение
+        self.final_image = 0  # обработанное изображение
         self.y = 0  # ось вниз
         self.x = 0  # ось вправо
         self.core_size = 0
@@ -41,6 +42,8 @@ class MainApp(form.Ui_MainWindow):
         :return:
         """
         if type(self.image) is np.ndarray:
+            self.final_image = 0
+            start = time.time()
             self.core_size = int(self.lineEdit.text())
             self.final_image = np.zeros((self.y, self.x), dtype=object)
             # self.final_image = self.image
@@ -61,24 +64,25 @@ class MainApp(form.Ui_MainWindow):
                     self.garmony_filter2()
                     type_filter = "_2x_garmo"
 
+        finish = time.time()
         foutname = self.fname + type_filter + "_filtered" + ".bmp"
         self.final_image = self.final_image.astype(np.uint8)
         cv2.imwrite(foutname, self.final_image)
         # self.changed_im.pixmap().save(self.fname + type_filter + "_filtered")  # сохранить изображение
         image = QtGui.QPixmap(QtGui.QImage(foutname, format=None, ))  # открываем картинку
         self.changed_im.setPixmap(image)  # помещаем картинку в QLabel
-        self.show_gist()
+        self.label_20.setText(str(finish - start))
 
     def geometry_filter2(self):
         """
         двумерный среднегеометрический фильтр
         :return:
         """
-        # TODO если в ядре 0, то будет пятно (нужно увел на 1, а потом ???)
         core = np.zeros((self.core_size, self.core_size), dtype=object)  # ядро
         for i in range(self.core_size//2, self.y - self.core_size//2):
             for j in range(self.core_size//2, self.x - self.core_size//2):
                 core = self.image[i-self.core_size//2:i+self.core_size//2+1, j-self.core_size//2:j+self.core_size//2+1]
+                core = np.where(core == 0, core + 1, core)
                 self.final_image[i, j] = int(np.prod(core) ** (1 / (self.core_size*self.core_size)))
 
     def geometry_filter1(self):
@@ -86,17 +90,18 @@ class MainApp(form.Ui_MainWindow):
         одномерный среднегеометрический фильтр
         :return:
         """
-        # TODO если в ядре 0, то будет пятно (нужно увел на 1, а потом ???)
         core = np.zeros(self.core_size, dtype=object)  # маска, заполненная нулями
         # np.prod - перемножение всех элементов маски
         for i in range(self.y):
             for j in range(self.core_size//2, self.x - self.core_size//2):  # проход по строкам
                 core = self.image[i, j-self.core_size//2:j+self.core_size//2+1]
+                core = np.where(core == 0, core + 1, core)
                 self.final_image[i, j] = int(np.prod(core) ** (1 / (self.core_size)))
 
         for i in range(self.x):
             for j in range(self.core_size//2, self.y - self.core_size//2):  # проход по столбцам
                 core = self.final_image[j-self.core_size//2:j+self.core_size//2+1, i]
+                core = np.where(core == 0, core + 1, core)
                 self.final_image[j, i] = int(np.prod(core) ** (1 / (self.core_size)))
 
 
@@ -106,13 +111,11 @@ class MainApp(form.Ui_MainWindow):
         двумерный среднегармонический фильтр
         :return:
         """
-        # TODO если в ядре 0, то будет пятно (нужно увел на 1, а потом ???)
         core = np.zeros((self.core_size, self.core_size), dtype=object)  # ядро
         for i in range(self.core_size // 2, self.y - self.core_size // 2):
             for j in range(self.core_size // 2, self.x - self.core_size // 2):
                 core = self.image[i - self.core_size // 2:i + self.core_size // 2 + 1, j - self.core_size // 2:j + self.core_size // 2 + 1]
-                temp = 1/core
-                temp2 = np.sum(1/core)
+                core = np.where(core == 0, core + 1, core)
                 self.final_image[i, j] = int((self.core_size**2) / (np.sum(1/core)))
 
     def garmony_filter1(self):
@@ -120,24 +123,42 @@ class MainApp(form.Ui_MainWindow):
         одномерный среднегармонический фильтр
         :return:
         """
-        # TODO если в ядре 0, то будет пятно (нужно увел на 1, а потом ???)
-        pass
+        core = np.zeros(self.core_size, dtype=object)  # маска, заполненная нулями
+        # np.prod - перемножение всех элементов маски
+        for i in range(self.y):
+            for j in range(self.core_size // 2, self.x - self.core_size // 2):  # проход по строкам
+                core = self.image[i, j - self.core_size // 2:j + self.core_size // 2 + 1]
+                core = np.where(core == 0, core + 1, core)
+                self.final_image[i, j] = int((self.core_size) / (np.sum(1/core)))
 
-    def show_gist(self):
-        """показать гистограмму яркости обработанного изображения"""
-        # TODO гистограмма для двух изображений
-        plt.hist(self.final_image)
-        plt.title("Гистограмма яркости")
-        plt.show()
+        for i in range(self.x):
+            for j in range(self.core_size // 2, self.y - self.core_size // 2):  # проход по столбцам
+                core = self.final_image[j - self.core_size // 2:j + self.core_size // 2 + 1, i]
+                core = np.where(core == 0, core + 1, core)
+                self.final_image[j, i] = int((self.core_size) / (np.sum(1/core)))
+
 
     def section_graph(self):
         """показать разрез функции яркости для n-ой строки"""
-        # TODO разрез для двух изображений
         if (type(self.final_image) is np.ndarray):
-            y = self.final_image[int(self.lineEdit_4.text()), :]  # яркости в строке
+            plt.subplot(221)
+            plt.hist(self.image)
+            plt.title("Гистограмма яркости исходного")
+            plt.subplot(222)
+            plt.hist(self.final_image)
+            plt.title("    и обработанного изображения")
+
+            y = self.image[int(self.lineEdit_4.text()), :]  # яркости в строке
             x = np.arange(0, self.x, 1)
+            plt.subplot(223)
             plt.bar(x, y)
-            plt.title("Разрез функции яркости по {} строке".format(self.lineEdit_4.text()))
+            plt.title("Разрез функции яркости ")
+            plt.xlabel("Пиксель")
+            plt.ylabel("Яркость")
+            plt.subplot(224)
+            y = self.final_image[int(self.lineEdit_4.text()), :]
+            plt.bar(x, y)
+            plt.title(" по {} строке".format(self.lineEdit_4.text()))
             plt.xlabel("Пиксель")
             plt.ylabel("Яркость")
             plt.show()
