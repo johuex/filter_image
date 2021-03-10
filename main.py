@@ -142,10 +142,10 @@ class MainApp(form.Ui_MainWindow):
         """показать разрез функции яркости для n-ой строки"""
         if (type(self.final_image) is np.ndarray):
             plt.subplot(221)
-            plt.hist(self.image)
+            plt.hist(self.image, color=['blue']*self.x)
             plt.title("Гистограмма яркости исходного")
             plt.subplot(222)
-            plt.hist(self.final_image)
+            plt.hist(self.final_image, color=['blue']*self.x)
             plt.title("    и обработанного изображения")
 
             y = self.image[int(self.lineEdit_4.text()), :]  # яркости в строке
