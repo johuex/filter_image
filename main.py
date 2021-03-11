@@ -27,7 +27,7 @@ class MainApp(form.Ui_MainWindow):
         выбор изображения пользователем
         :return:
         """
-        fname, temp = QFileDialog.getOpenFileName(self, "Open File", "", "Image files (*bmp)") # путь до картинки
+        fname, temp = QFileDialog.getOpenFileName(self, "Open File", "", "Image files (*bmp *jpg)") # путь до картинки
         self.image = cv2.imread(fname, 0)  # матричное представление изображения в ndarray
         self.image = self.image.astype(object)
         self.y, self.x = self.image.shape  # размер картинки
@@ -65,7 +65,7 @@ class MainApp(form.Ui_MainWindow):
                     type_filter = "_2x_garmo"
 
         finish = time.time()
-        foutname = self.fname + type_filter + "_filtered" + ".bmp"
+        foutname = type_filter + "_filtered" + ".bmp"
         self.final_image = self.final_image.astype(np.uint8)
         cv2.imwrite(foutname, self.final_image)
         # self.changed_im.pixmap().save(self.fname + type_filter + "_filtered")  # сохранить изображение
