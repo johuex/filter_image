@@ -16,6 +16,3 @@
 
 ## Пример работы приложения
 ![пример работы приложения](example.png)
-
-P.S.: отображение графиков matplotlib.pyplot тестировалось только в PyCharm Professional Edition.
-
