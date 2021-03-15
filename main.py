@@ -12,7 +12,8 @@ class MainApp(form.Ui_MainWindow):
         super().__init__()
         self.setupUi(self)
         self.image = 0  # исходное изображение
-        self.fname = ""  # путь к исх изо
+        self.foutname = ""  # путь к фин изо
+        self.foutname_2 = ""
         self.final_image = 0  # обработанное изображение
         self.y = 0  # ось вниз
         self.x = 0  # ось вправо
@@ -65,11 +66,10 @@ class MainApp(form.Ui_MainWindow):
                     type_filter = "_2x_garmo"
 
         finish = time.time()
-        foutname = type_filter + "_filtered" + ".bmp"
+        self.foutname = type_filter + "_filtered" + ".bmp"
         self.final_image = self.final_image.astype(np.uint8)
-        cv2.imwrite(foutname, self.final_image)
-        # self.changed_im.pixmap().save(self.fname + type_filter + "_filtered")  # сохранить изображение
-        image = QtGui.QPixmap(QtGui.QImage(foutname, format=None, ))  # открываем картинку
+        cv2.imwrite(self.foutname, self.final_image)
+        image = QtGui.QPixmap(QtGui.QImage(self.foutname, format=None, ))  # открываем картинку
         self.changed_im.setPixmap(image)  # помещаем картинку в QLabel
         self.label_20.setText(str(finish - start))
 
@@ -142,26 +142,32 @@ class MainApp(form.Ui_MainWindow):
         """показать разрез функции яркости для n-ой строки"""
         if (type(self.final_image) is np.ndarray):
             plt.subplot(221)
-            plt.hist(self.image, color=['blue']*self.x)
+            plt.hist(self.image, color=['blue']*self.x, histtype='stepfilled')
             plt.title("Гистограмма яркости исходного")
             plt.subplot(222)
-            plt.hist(self.final_image, color=['blue']*self.x)
+            plt.hist(self.final_image, color=['blue']*self.x, histtype='stepfilled')
             plt.title("    и обработанного изображения")
 
             y = self.image[int(self.lineEdit_4.text()), :]  # яркости в строке
             x = np.arange(0, self.x, 1)
             plt.subplot(223)
-            plt.bar(x, y)
+            plt.plot(x, y)
             plt.title("Разрез функции яркости ")
             plt.xlabel("Пиксель")
             plt.ylabel("Яркость")
             plt.subplot(224)
             y = self.final_image[int(self.lineEdit_4.text()), :]
-            plt.bar(x, y)
+            plt.plot(x, y)
             plt.title(" по {} строке".format(self.lineEdit_4.text()))
             plt.xlabel("Пиксель")
             plt.ylabel("Яркость")
             plt.show()
+            cv2.imread(self.foutname)
+            self.foutname_2 =  "line_for_graph.bmp"
+            self.final_image = cv2.line(self.final_image, (0, int(self.lineEdit_4.text())), (self.x, int(self.lineEdit_4.text())), (255, 255, 255), 1)
+            cv2.imwrite(self.foutname_2, self.final_image)
+            image = QtGui.QPixmap(QtGui.QImage(self.foutname_2, format=None, ))  # открываем картинку
+            self.changed_im.setPixmap(image)  # помещаем картинку в QLabel
 
     def brightness(self):
         self.label_16.setText(str(self.image[int(self.lineEdit_2.text()), int(self.lineEdit_3.text())]))
